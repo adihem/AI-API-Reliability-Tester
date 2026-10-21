@@ -1,0 +1,30 @@
+name: timeout_a3
+dataset: datasets/prompts.json
+
+# Timeout experiment: a deliberately short client timeout (near baseline P95 = 1.53s)
+# turns slow responses into TIMEOUT failures, giving retries something to recover.
+# Only max_attempts differs between timeout_a1 / a2 / a3.
+model:
+  name: minimax/minimax-m3.1-flash:free
+  base_url: https://openrouter.ai/api/v1
+  api_key_env: API_KEY
+
+request:
+  temperature: 0.2
+  max_tokens: 500
+  timeout_seconds: 1.5
+
+test:
+  requests: 30
+  concurrency: 1
+  min_interval_seconds: 3.5  # ~17 tasks/min, under the free tier's 20 req/min
+
+retry:
+  enabled: true
+  max_attempts: 3  # 2 retries
+  backoff_seconds: 1
+  max_backoff_seconds: 30
+  retry_on: [TIMEOUT, CONNECTION_ERROR, RATE_LIMIT, SERVER_ERROR]
+
+validation:
+  type: exact_match

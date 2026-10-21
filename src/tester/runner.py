@@ -9,6 +9,7 @@ Three levels:
 import itertools
 import logging
 import sqlite3
+import time
 from collections.abc import Callable
 from datetime import datetime, timezone
 
@@ -98,7 +99,13 @@ def run_experiment(
     if conn is not None:
         result.id = database.create_experiment(conn, result)
     # ponytail: sequential only; concurrency (asyncio + httpx.AsyncClient) once this is stable.
+    last_start = None
     for task in select_tasks(config, dataset, limit):
+        if last_start is not None:
+            gap = config.test.min_interval_seconds - (time.monotonic() - last_start)
+            if gap > 0:
+                policy.sleep(gap)
+        last_start = time.monotonic()
         attempts = run_test_case(client, task, config, policy)
         result.attempts.extend(attempts)
         if conn is not None:

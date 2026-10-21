@@ -156,3 +156,34 @@ def test_cli_summary_shows_recovery(monkeypatch, tmp_path):
     assert "up to 2 attempts" in out.output and "PASS (2 tries)" in out.output
     assert "Initial success 1/2 (50%), final success 2/2 (100%), recovered by retry 1" in out.output
     assert "Attempts 3 (1.50/task)" in out.output
+
+
+# --- pacing and quota guard (Phase 10 controls) ---
+
+
+def test_pacing_waits_between_task_starts():
+    config = cfg(3).model_copy(update={"test": cfg(3).test.model_copy(update={"min_interval_seconds": 5})})
+    p, waits = policy(max_attempts=1, enabled=False)
+    run_experiment(config, tasks(3), SequenceClient(ok("BUG"), ok("BUG"), ok("BUG")), policy=p)
+    assert len(waits) == 2 and all(4.5 < w <= 5 for w in waits)  # gap minus the (tiny) task time
+
+
+def test_no_pacing_by_default():
+    p, waits = policy(max_attempts=1, enabled=False)
+    run_experiment(cfg(3), tasks(3), SequenceClient(ok("BUG"), ok("BUG"), ok("BUG")), policy=p)
+    assert waits == []
+
+
+def test_daily_quota_stops_run(monkeypatch, tmp_path):
+    monkeypatch.chdir(ROOT)
+    quota = err(FailureType.RATE_LIMIT, 429).model_copy(
+        update={"error_message": "HTTP 429: Rate limit exceeded: free-models-per-day"})
+    client = SequenceClient(ok("Paris"), quota, ok("never sent"))
+    monkeypatch.setattr(cli, "build_client", lambda model, request: client)
+    monkeypatch.setattr("time.sleep", lambda s: None)
+    db = tmp_path / "q.db"
+    out = CliRunner().invoke(cli.app, ["run", "-c", "config/baseline.yaml", "--limit", "3", "--db", str(db)])
+    assert out.exit_code == 4 and "daily request quota" in out.output
+    assert client.calls == 2  # third task never sent
+    (row,) = database.list_experiments(database.connect(db))
+    assert row["finished_at"] is None

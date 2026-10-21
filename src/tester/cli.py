@@ -15,6 +15,12 @@ from tester.validators import validate as validate_response
 
 app = typer.Typer(help="AI API Reliability Tester", no_args_is_help=True)
 
+QUOTA_MARKER = "per-day"  # OpenRouter: "Rate limit exceeded: free-models-per-day"
+
+
+class QuotaExhausted(Exception):
+    pass
+
 
 @app.command()
 def version() -> None:
@@ -106,6 +112,10 @@ def run(
         elapsed = (last.finished_at - attempts[0].started_at).total_seconds()
         detail = "" if last.success else f"  {last.validation_message or last.response.error_message or ''}"[:120]
         typer.echo(f"[{done:>2}/{total}] {task.id:<20} {status:<32} {elapsed:6.2f}s{detail}")
+        # ponytail: OpenRouter-specific string. A spent daily quota is an account limit, not API
+        # unreliability; every later request would fail the same way and pollute the results.
+        if any(QUOTA_MARKER in (a.response.error_message or "") for a in attempts):
+            raise QuotaExhausted
 
     conn = database.connect(db)
     try:
@@ -114,6 +124,10 @@ def run(
     except KeyboardInterrupt:
         typer.echo(f"\nInterrupted. Finished tasks are saved in {db} (experiment marked unfinished).", err=True)
         raise typer.Exit(130)
+    except QuotaExhausted:
+        typer.echo("\nStopped: the provider's daily request quota is used up. This run is marked unfinished;"
+                   " rerun the whole experiment after the quota resets (00:00 UTC).", err=True)
+        raise typer.Exit(4)
     finally:
         conn.close()
     typer.echo(f"\nSaved as experiment #{result.id} in {db}")

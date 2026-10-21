@@ -18,6 +18,7 @@ request:
 test:
   requests: 30
   concurrency: 1
+  min_interval_seconds: 3.5  # ~17 tasks/min, under the free tier's 20 req/min
 
 retry:
   enabled: false

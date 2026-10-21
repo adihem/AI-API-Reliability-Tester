@@ -108,8 +108,9 @@ def test_requests_and_limit(requests, limit, expected):
     assert len(select_tasks(cfg(requests), tasks(), limit)) == expected
 
 
-def test_full_dataset_through_fake_api():
+def test_full_dataset_through_fake_api(monkeypatch):
     """Real config + real 30-task dataset, fake API answering every task correctly."""
+    monkeypatch.setattr("time.sleep", lambda s: None)  # skip the config's real-API pacing
     config = load_config(ROOT / "config" / "baseline.yaml")
     ds = load_dataset(ROOT / config.dataset)
     answers = {}
@@ -130,6 +131,7 @@ def test_full_dataset_through_fake_api():
 
 def test_cli_run_with_limit_saves_and_lists(monkeypatch, tmp_path):
     monkeypatch.chdir(ROOT)
+    monkeypatch.setattr("time.sleep", lambda s: None)
     db = str(tmp_path / "t.db")
     fake = FakeClient(default=ok("BUG"))
     monkeypatch.setattr(cli, "build_client", lambda model, request: fake)
