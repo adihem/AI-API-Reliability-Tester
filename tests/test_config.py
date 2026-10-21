@@ -57,13 +57,13 @@ def test_retry_config_parsed(tmp_path):
         ("request", "timeout_seconds", -5),
         ("retry", "max_attempts", 0),
         ("test", "concurrency", -1),
-        ("test", "concurrency", 2),  # sequential runner only, for now
+        ("test", "concurrency", 2),
         ("request", "temperature", 3),
         ("request", "max_tokens", 0),
         ("validation", "type", "fuzzy"),
         ("retry", "retry_on", ["NOT_A_FAILURE"]),
-        ("retry", "max_attempts", 3),  # retry disabled but >1 attempts
-        ("request", "temprature", 0.5),  # typo -> unknown key
+        ("retry", "max_attempts", 3),
+        ("request", "temprature", 0.5),
     ],
 )
 def test_invalid_values_rejected(tmp_path, section, key, value):

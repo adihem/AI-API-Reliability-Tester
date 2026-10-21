@@ -37,17 +37,16 @@ def policy(max_attempts=3, enabled=True, **kw):
     return p, waits
 
 
-# --- policy decisions ---
 
 
 @pytest.mark.parametrize(
     "failure,attempt,expected",
     [
         (T, 1, True), (RL, 1, True), (SRV, 2, True), (FailureType.CONNECTION_ERROR, 1, True),
-        (T, 3, False),                       # attempts exhausted
-        (AUTH, 1, False), (BAD, 1, False),   # not retryable
+        (T, 3, False),
+        (AUTH, 1, False), (BAD, 1, False),
         (FailureType.VALIDATION_ERROR, 1, False), (FailureType.FORMAT_ERROR, 1, False),
-        (None, 1, False),                    # success
+        (None, 1, False),
     ],
 )
 def test_should_retry(failure, attempt, expected):
@@ -73,7 +72,6 @@ def test_exponential_backoff_capped():
     assert p.delay(3) == 0
 
 
-# --- the four retry paths from the spec ---
 
 
 def run(client, p, task_cfg=None):
@@ -100,7 +98,7 @@ def test_fail_fail_fail_gives_up():
     client = SequenceClient(err(T), err(T), err(T), ok("never reached"))
     attempts = run(client, p)
     assert len(attempts) == 3 and client.calls == 3
-    assert waits == [1, 2]  # no wait after the last attempt
+    assert waits == [1, 2]
     assert not recovered(attempts)
 
 
@@ -124,20 +122,18 @@ def test_first_try_success_single_attempt():
 
 
 def test_default_policy_comes_from_config():
-    # retry disabled in cfg() -> one attempt even for a retryable failure
     attempts = run_test_case(SequenceClient(err(T), ok("BUG")), tasks(1).tasks[0], cfg())
     assert len(attempts) == 1
 
 
-# --- experiment level ---
 
 
 def test_experiment_stores_every_attempt(tmp_path):
     conn = database.connect(tmp_path / "r.db")
     p, waits = policy(max_attempts=2)
-    client = SequenceClient(err(T), ok("BUG"),    # t0: recovered
-                            ok("BUG"),            # t1: first try
-                            err(RL), err(RL))     # t2: gives up
+    client = SequenceClient(err(T), ok("BUG"),
+                            ok("BUG"),
+                            err(RL), err(RL))
     result = run_experiment(cfg(enabled=True, max_attempts=2), tasks(3), client, conn=conn, policy=p)
     assert [(a.task_id, a.attempt_number, a.success) for a in result.attempts] == [
         ("t0", 1, False), ("t0", 2, True), ("t1", 1, True), ("t2", 1, False), ("t2", 2, False)]
@@ -147,7 +143,7 @@ def test_experiment_stores_every_attempt(tmp_path):
 
 def test_cli_summary_shows_recovery(monkeypatch, tmp_path):
     monkeypatch.chdir(ROOT)
-    monkeypatch.setattr("time.sleep", lambda s: None)  # retry_1 backs off 1s; don't wait in tests
+    monkeypatch.setattr("time.sleep", lambda s: None)
     client = SequenceClient(err(T), ok("Paris"), ok("42"))
     monkeypatch.setattr(cli, "build_client", lambda model, request: client)
     out = CliRunner().invoke(cli.app, ["run", "-c", "config/retry_1.yaml", "--limit", "2",
@@ -158,14 +154,13 @@ def test_cli_summary_shows_recovery(monkeypatch, tmp_path):
     assert "Attempts 3 (1.50/task)" in out.output
 
 
-# --- pacing and quota guard (Phase 10 controls) ---
 
 
 def test_pacing_waits_between_task_starts():
     config = cfg(3).model_copy(update={"test": cfg(3).test.model_copy(update={"min_interval_seconds": 5})})
     p, waits = policy(max_attempts=1, enabled=False)
     run_experiment(config, tasks(3), SequenceClient(ok("BUG"), ok("BUG"), ok("BUG")), policy=p)
-    assert len(waits) == 2 and all(4.5 < w <= 5 for w in waits)  # gap minus the (tiny) task time
+    assert len(waits) == 2 and all(4.5 < w <= 5 for w in waits)
 
 
 def test_no_pacing_by_default():
@@ -184,6 +179,6 @@ def test_daily_quota_stops_run(monkeypatch, tmp_path):
     db = tmp_path / "q.db"
     out = CliRunner().invoke(cli.app, ["run", "-c", "config/baseline.yaml", "--limit", "3", "--db", str(db)])
     assert out.exit_code == 4 and "daily request quota" in out.output
-    assert client.calls == 2  # third task never sent
+    assert client.calls == 2
     (row,) = database.list_experiments(database.connect(db))
     assert row["finished_at"] is None

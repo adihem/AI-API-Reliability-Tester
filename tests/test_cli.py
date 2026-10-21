@@ -69,7 +69,7 @@ def test_compare(db):
     assert any(l.startswith("Initial success") and "33.3%" in l for l in lines)
     final = next(l for l in lines if l.startswith("Final success"))
     assert final.split()[-2:] == ["33.3%", "66.7%"]
-    assert "Warning" not in out.output  # same dataset, same tasks, same model
+    assert "Warning" not in out.output
 
     folder = db.parent / "compare_1_2"
     assert {p.name for p in folder.iterdir()} == {"comparison.md", "comparison.csv", "figures"}
@@ -105,4 +105,4 @@ def test_export_interrupted_run(db):
     exp_id = database.create_experiment(conn, run_experiment(cfg(1), tasks(1), SequenceClient(ok("BUG"))))
     conn.close()
     out = invoke(cli.app, ["export", "-e", str(exp_id), "--db", str(db)])
-    assert out.exit_code == 1 and "no attempts" in out.output  # header only, nothing to report
+    assert out.exit_code == 1 and "no attempts" in out.output

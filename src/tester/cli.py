@@ -15,7 +15,7 @@ from tester.validators import validate as validate_response
 
 app = typer.Typer(help="AI API Reliability Tester", no_args_is_help=True)
 
-QUOTA_MARKER = "per-day"  # OpenRouter: "Rate limit exceeded: free-models-per-day"
+QUOTA_MARKER = "per-day"
 
 
 class QuotaExhausted(Exception):
@@ -108,12 +108,9 @@ def run(
         status = "PASS" if last.success else f"FAIL {last.failure_type}"
         if len(attempts) > 1:
             status += f" ({len(attempts)} tries)"
-        # Task time includes every attempt and backoff wait.
         elapsed = (last.finished_at - attempts[0].started_at).total_seconds()
         detail = "" if last.success else f"  {last.validation_message or last.response.error_message or ''}"[:120]
         typer.echo(f"[{done:>2}/{total}] {task.id:<20} {status:<32} {elapsed:6.2f}s{detail}")
-        # ponytail: OpenRouter-specific string. A spent daily quota is an account limit, not API
-        # unreliability; every later request would fail the same way and pollute the results.
         if any(QUOTA_MARKER in (a.response.error_message or "") for a in attempts):
             raise QuotaExhausted
 

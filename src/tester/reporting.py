@@ -11,7 +11,7 @@ from pathlib import Path
 
 import matplotlib
 
-matplotlib.use("Agg")  # files only, no GUI window
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 import yaml  # noqa: E402
 
@@ -20,7 +20,6 @@ from tester.models import ExperimentResult  # noqa: E402
 
 RESULTS_DIR = Path("results")
 
-# Reference dataviz palette (validated: light mode, CVD-safe for adjacent slots).
 SURFACE, INK, INK_2, GRID = "#fcfcfb", "#0b0b0b", "#52514e", "#e4e3df"
 BLUE, ORANGE, AQUA = "#2a78d6", "#eb6834", "#1baf7a"
 
@@ -90,7 +89,6 @@ def write_csv(result: ExperimentResult, path: Path) -> None:
             })
 
 
-# --- charts ---
 
 
 def _axes(height: float = 2.6):
@@ -135,7 +133,7 @@ def chart_latency(result: ExperimentResult, m: Metrics, path: Path) -> str:
     ax.hist([a.response.latency_seconds for a in result.attempts], bins=min(20, max(5, m.attempts // 2)),
             color=BLUE, edgecolor=SURFACE, linewidth=2)
     top = ax.get_ylim()[1]
-    ax.set_ylim(0, top * 1.18)  # headroom so marker labels sit above the bars, not on them
+    ax.set_ylim(0, top * 1.18)
     ax.yaxis.set_major_locator(matplotlib.ticker.MaxNLocator(integer=True))
     for value, name in ((m.attempt_latency.median, "median"), (m.attempt_latency.p95, "P95")):
         ax.axvline(value, color=INK_2, linestyle="--", linewidth=1)
@@ -175,7 +173,6 @@ def chart_recovery(m: Metrics, path: Path) -> str:
     left = 0
     for name, count, color in parts:
         if count:
-            # 2px surface gap between stacked segments; count labels so identity isn't color-only.
             ax.barh([0], [count], left=left, height=0.5, color=color, edgecolor=SURFACE, linewidth=2, label=name)
             ax.text(left + count / 2, 0, str(count), ha="center", va="center", color=SURFACE, fontsize=9,
                     fontweight="bold")
@@ -197,7 +194,6 @@ def write_charts(result: ExperimentResult, m: Metrics, folder: Path) -> list[str
     ]
 
 
-# --- comparison across experiments ---
 
 
 def label(result: ExperimentResult) -> str:
@@ -297,7 +293,6 @@ def write_comparison(results: list[ExperimentResult], metrics: list[Metrics], ba
     return out
 
 
-# --- markdown ---
 
 
 def pct(x: float | None) -> str:

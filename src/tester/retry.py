@@ -9,7 +9,7 @@ from tester.models import FailureType, RequestResult, RetryConfig
 class RetryPolicy:
     def __init__(self, config: RetryConfig, sleep: Callable[[float], None] | None = None):
         self.config = config
-        self.sleep = sleep or time.sleep  # injectable so tests don't actually wait
+        self.sleep = sleep or time.sleep
 
     def should_retry(self, failure_type: FailureType | None, attempt_number: int) -> bool:
         """After attempt `attempt_number` ended with `failure_type`, try again?"""
@@ -22,8 +22,6 @@ class RetryPolicy:
 
     def delay(self, retry_number: int) -> float:
         """Wait before retry `retry_number` (1-based): base, 2*base, 4*base, ... capped."""
-        # ponytail: no jitter and no Retry-After header; fine for one sequential client.
-        # Add jitter with concurrency, Retry-After if 429s dominate.
         return min(self.config.backoff_seconds * 2 ** (retry_number - 1), self.config.max_backoff_seconds)
 
 

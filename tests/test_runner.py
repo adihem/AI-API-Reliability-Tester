@@ -79,7 +79,7 @@ def test_wrong_answer_is_validation_error():
 def test_api_failure_skips_validation():
     r = run_attempt(FakeClient(default=err(FailureType.TIMEOUT)), tasks().tasks[0], 1, cfg())
     assert r.validation_passed is None and r.failure_type is FailureType.TIMEOUT
-    assert r.retryable is True  # TIMEOUT is in the default retry_on list
+    assert r.retryable is True
 
 
 def test_retryable_follows_config():
@@ -110,7 +110,7 @@ def test_requests_and_limit(requests, limit, expected):
 
 def test_full_dataset_through_fake_api(monkeypatch):
     """Real config + real 30-task dataset, fake API answering every task correctly."""
-    monkeypatch.setattr("time.sleep", lambda s: None)  # skip the config's real-API pacing
+    monkeypatch.setattr("time.sleep", lambda s: None)
     config = load_config(ROOT / "config" / "baseline.yaml")
     ds = load_dataset(ROOT / config.dataset)
     answers = {}
@@ -138,7 +138,7 @@ def test_cli_run_with_limit_saves_and_lists(monkeypatch, tmp_path):
     out = CliRunner().invoke(cli.app, ["run", "-c", "config/baseline.yaml", "--limit", "3", "--db", db])
     assert out.exit_code == 0, out.output
     assert len(fake.prompts) == 3
-    assert "[ 3/3]" in out.output and "final success 0/3" in out.output  # first 3 tasks don't expect BUG
+    assert "[ 3/3]" in out.output and "final success 0/3" in out.output
     assert "VALIDATION_ERROR x3" in out.output and "Saved as experiment #1" in out.output
 
     listing = CliRunner().invoke(cli.app, ["list", "--db", db]).output

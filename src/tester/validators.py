@@ -34,8 +34,6 @@ _FENCE = re.compile(r"^```[A-Za-z]*\s*\n?(.*?)\n?\s*```$", re.S)
 
 
 def strip_fence(text: str) -> str:
-    # Lenient by design: a ```json fence around valid JSON counts as a pass, since nearly
-    # every chat model adds one. Raw text is still stored, so strictness can be re-scored later.
     text = text.strip()
     m = _FENCE.match(text)
     return m.group(1).strip() if m else text

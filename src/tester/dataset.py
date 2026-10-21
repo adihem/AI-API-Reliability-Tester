@@ -33,5 +33,4 @@ def load_dataset(path: str | Path) -> Dataset:
     except ValidationError as e:
         raise DatasetError(f"Invalid dataset {path}:\n{e}") from None
 
-    # Hash the exact bytes so any edit to the dataset is visible in experiment records.
     return ds.model_copy(update={"sha256": hashlib.sha256(data).hexdigest()})

@@ -127,7 +127,6 @@ def list_experiments(conn) -> list[sqlite3.Row]:
     return conn.execute(
         "SELECT e.id, e.name, e.model, e.task_limit, e.created_at, e.finished_at,"
         " COUNT(DISTINCT r.task_id) AS tasks, COUNT(r.id) AS attempts,"
-        # A SUCCESS ends a task's attempts, so this counts tasks with final success.
         " COUNT(DISTINCT CASE WHEN r.status = 'SUCCESS' THEN r.task_id END) AS successes"
         " FROM experiments e LEFT JOIN requests r ON r.experiment_id = e.id"
         " GROUP BY e.id ORDER BY e.id"
@@ -164,7 +163,6 @@ def load_experiment(conn, experiment_id: int) -> ExperimentResult:
 
 
 def _attempt(row: sqlite3.Row) -> RequestResult:
-    # A validation verdict exists only if the API call itself succeeded.
     api_ok = row["validation_status"] is not None
     response = APIResponse(
         success=api_ok,

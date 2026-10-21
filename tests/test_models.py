@@ -19,8 +19,8 @@ def test_api_response_failure():
 @pytest.mark.parametrize(
     "kwargs",
     [
-        {"success": True, "error_type": "TIMEOUT"},  # success with an error
-        {"success": False},  # failure without a type
+        {"success": True, "error_type": "TIMEOUT"},
+        {"success": False},
     ],
 )
 def test_api_response_inconsistent(kwargs):

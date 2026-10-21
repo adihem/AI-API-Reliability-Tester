@@ -50,14 +50,11 @@ class OpenAICompatibleClient:
         model: ModelConfig,
         request: RequestConfig,
         api_key: str,
-        transport: httpx.BaseTransport | None = None,  # tests inject httpx.MockTransport
+        transport: httpx.BaseTransport | None = None,
     ):
         self.model = model
         self.request = request
         self._api_key = api_key
-        # ponytail: httpx timeouts are per phase (connect/read/...), not one wall-clock budget.
-        # For a single non-streamed response the read wait dominates, so this approximates
-        # total timeout; wrap in a deadline if streaming is ever added.
         self._http = httpx.Client(
             base_url=model.base_url,
             headers={"Authorization": f"Bearer {api_key}"},
@@ -118,7 +115,6 @@ class OpenAICompatibleClient:
     def _fail(self, start, error_type, message, status=None, latency=None) -> APIResponse:
         if latency is None:
             latency = time.perf_counter() - start
-        # Never let the key leak into stored results, even if a provider echoes it back.
         message = message.replace(self._api_key, "***")[:MAX_ERROR_CHARS]
         return APIResponse(success=False, http_status=status, latency_seconds=latency,
                            error_type=error_type, error_message=message)
@@ -129,7 +125,6 @@ def _error_text(resp: httpx.Response) -> str:
         err = resp.json().get("error")
         if isinstance(err, dict) and err.get("message"):
             msg = f"HTTP {resp.status_code}: {err['message']}"
-            # OpenRouter puts the upstream provider's real reason in error.metadata.raw.
             raw = (err.get("metadata") or {}).get("raw")
             return f"{msg} | {raw}" if raw else msg
     except (ValueError, AttributeError):
@@ -138,7 +133,7 @@ def _error_text(resp: httpx.Response) -> str:
 
 
 def load_api_key(env_name: str) -> str:
-    load_dotenv()  # reads .env from the working directory; real env vars take precedence
+    load_dotenv()
     key = os.environ.get(env_name, "").strip()
     if not key:
         raise MissingAPIKey(f"Environment variable {env_name} is not set. Add it to .env (see .env.example).")

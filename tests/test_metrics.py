@@ -49,7 +49,7 @@ def test_success_and_recovery(result):
     assert (m.tasks, m.attempts, m.avg_attempts) == (4, 7, 1.75)
     assert (m.initial_successes, m.final_successes, m.recovered) == (1, 3, 2)
     assert (m.initial_success_rate, m.final_success_rate, m.failure_rate) == (0.25, 0.75, 0.25)
-    assert m.retry_recovery_rate == 2 / 3  # b and c recovered, d did not
+    assert m.retry_recovery_rate == 2 / 3
 
 
 def test_failure_distributions(result):
@@ -60,12 +60,10 @@ def test_failure_distributions(result):
 
 def test_latency(result):
     m = compute_metrics(result)
-    # attempt latencies: 1, 3, 1, .5, .5, 2, 4
     assert m.attempt_latency.mean == pytest.approx(12 / 7)
     assert m.attempt_latency.median == 1.0
-    assert m.attempt_latency.p95 == pytest.approx(3.7)  # numpy.percentile(..., 95)
+    assert m.attempt_latency.p95 == pytest.approx(3.7)
     assert (m.attempt_latency.min, m.attempt_latency.max) == (0.5, 4.0)
-    # task spans (first start -> last end): a 1, b 2..7 = 5, c 8..14 = 6, d 4
     assert m.task_latency.mean == pytest.approx(4.0)
     assert m.task_latency.max == 6.0
 
@@ -88,7 +86,7 @@ def test_no_tokens_reported():
                          attempts=[attempt("a", 1, 0, 1.0, FailureType.TIMEOUT)])
     m = compute_metrics(r)
     assert m.total_tokens is None and m.tokens_per_task is None
-    assert m.duration_seconds is None and m.throughput_tasks_per_min is None  # unfinished run
+    assert m.duration_seconds is None and m.throughput_tasks_per_min is None
 
 
 def test_empty_rejected():
@@ -102,7 +100,6 @@ def test_percentile(values, p, expected):
     assert percentile(values, p) == pytest.approx(expected)
 
 
-# --- report folder ---
 
 
 def test_write_report(result, tmp_path):

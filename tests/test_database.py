@@ -10,7 +10,7 @@ from test_runner import FakeClient, cfg, err, ok, tasks
 
 @pytest.fixture
 def db_path(tmp_path):
-    return tmp_path / "results" / "exp.db"  # parent dir does not exist yet
+    return tmp_path / "results" / "exp.db"
 
 
 def mixed_run(conn=None):
@@ -44,10 +44,8 @@ def test_row_layout(db_path):
     q = lambda sql: [tuple(r) for r in conn.execute(sql).fetchall()]
     assert q("SELECT task_id, attempt_number, http_status, status FROM requests ORDER BY id") == [
         ("t0", 1, 200, "SUCCESS"), ("t1", 1, 429, "FAILURE"), ("t2", 1, 200, "FAILURE")]
-    # responses only where a 2xx came back
     assert q("SELECT response_text, total_tokens, validation_status FROM responses ORDER BY id") == [
         ("BUG", 10, "PASS"), ("FEATURE", 10, "FAIL")]
-    # errors only for failed attempts, with retryability
     assert q("SELECT failure_type, retryable FROM errors ORDER BY id") == [
         ("RATE_LIMIT", 1), ("VALIDATION_ERROR", 0)]
     assert q("SELECT name, model, finished_at IS NOT NULL FROM experiments") == [("t", "m", 1)]
@@ -93,7 +91,7 @@ def test_list_and_latest(db_path):
 
 
 def test_save_experiment_after_the_fact(db_path):
-    result = mixed_run()  # in memory, no conn
+    result = mixed_run()
     conn = database.connect(db_path)
     exp_id = database.save_experiment(conn, result)
     assert database.load_experiment(conn, exp_id) == result.model_copy(update={"id": exp_id})

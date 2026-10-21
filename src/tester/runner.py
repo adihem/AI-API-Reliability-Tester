@@ -32,7 +32,7 @@ def run_attempt(client: APIClient, task: Task, attempt_number: int, config: Expe
     started = now()
     try:
         resp = client.send(task.prompt)
-    except Exception as e:  # a client bug must not abort a 30-task experiment
+    except Exception as e:
         log.exception("client crashed on task %s", task.id)
         resp = APIResponse(success=False, latency_seconds=(now() - started).total_seconds(),
                            error_type=FailureType.UNKNOWN_ERROR, error_message=f"{type(e).__name__}: {e}")
@@ -98,7 +98,6 @@ def run_experiment(
     )
     if conn is not None:
         result.id = database.create_experiment(conn, result)
-    # ponytail: sequential only; concurrency (asyncio + httpx.AsyncClient) once this is stable.
     last_start = None
     for task in select_tasks(config, dataset, limit):
         if last_start is not None:

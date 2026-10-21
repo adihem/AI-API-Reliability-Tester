@@ -37,14 +37,12 @@ DEFAULT_RETRYABLE = [
 ValidationType = Literal["non_empty", "exact_match", "json", "schema"]
 
 
-# --- Experiment configuration (loaded from YAML) ---
 
 
 class ModelConfig(Strict):
     name: str = Field(min_length=1)
-    # Any OpenAI-compatible endpoint: OpenAI, Groq, OpenRouter, Together, local Ollama, ...
     base_url: str = Field(default="https://api.openai.com/v1", pattern=r"^https?://")
-    api_key_env: str = Field(default="API_KEY", min_length=1)  # env var holding the key, read from .env
+    api_key_env: str = Field(default="API_KEY", min_length=1)
 
 
 class RequestConfig(Strict):
@@ -54,19 +52,14 @@ class RequestConfig(Strict):
 
 
 class WorkloadConfig(Strict):
-    # Not named TestConfig: pytest would try to collect it as a test class.
     requests: int = Field(gt=0)
-    # ponytail: runner is sequential; >1 is rejected rather than silently ignored.
-    # Lift the cap when the asyncio + httpx.AsyncClient runner exists.
     concurrency: int = Field(default=1, ge=1, le=1)
-    # Minimum gap between task starts. Keeps runs under a provider's per-minute cap so
-    # self-inflicted RATE_LIMITs don't contaminate results (free OpenRouter: 20 req/min).
     min_interval_seconds: float = Field(default=0, ge=0)
 
 
 class RetryConfig(Strict):
     enabled: bool = False
-    max_attempts: int = Field(default=1, gt=0)  # total attempts, including the first
+    max_attempts: int = Field(default=1, gt=0)
     backoff_seconds: float = Field(default=1, ge=0)
     max_backoff_seconds: float = Field(default=30, ge=0)
     retry_on: list[FailureType] = Field(default_factory=lambda: list(DEFAULT_RETRYABLE))
@@ -83,7 +76,7 @@ class ValidationConfig(Strict):
 
 
 class ExperimentConfig(Strict):
-    name: str = Field(min_length=1, pattern=r"^[A-Za-z0-9_\-]+$")  # used in result folder names
+    name: str = Field(min_length=1, pattern=r"^[A-Za-z0-9_\-]+$")
     dataset: str = "datasets/prompts.json"
     model: ModelConfig
     request: RequestConfig
@@ -92,7 +85,6 @@ class ExperimentConfig(Strict):
     validation: ValidationConfig
 
 
-# --- Dataset ---
 
 
 SCHEMA_TYPES = {"string", "integer", "number", "boolean", "array", "object"}
@@ -131,7 +123,7 @@ class Task(Strict):
 class Dataset(Strict):
     version: str = Field(min_length=1)
     tasks: list[Task] = Field(min_length=1)
-    sha256: str = ""  # filled by the loader from the file bytes, not written in the file
+    sha256: str = ""
 
     @model_validator(mode="after")
     def _unique_ids(self):
@@ -143,7 +135,6 @@ class Dataset(Strict):
         return self
 
 
-# --- Results ---
 
 
 class APIResponse(BaseModel):
@@ -174,9 +165,9 @@ class RequestResult(BaseModel):
     started_at: datetime
     finished_at: datetime
     response: APIResponse
-    validation_passed: bool | None = None  # None when the API call itself failed
+    validation_passed: bool | None = None
     validation_message: str | None = None
-    failure_type: FailureType | None = None  # transport or validation failure
+    failure_type: FailureType | None = None
     retryable: bool = False
 
     @property
@@ -185,12 +176,12 @@ class RequestResult(BaseModel):
 
 
 class ExperimentResult(BaseModel):
-    id: int | None = None  # database id, once stored
+    id: int | None = None
     config: ExperimentConfig
     dataset_version: str
     dataset_hash: str
     app_version: str
-    task_limit: int | None = None  # --limit used for this run, if any
+    task_limit: int | None = None
     started_at: datetime
     finished_at: datetime | None = None
     attempts: list[RequestResult] = Field(default_factory=list)

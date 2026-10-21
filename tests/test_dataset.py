@@ -42,13 +42,13 @@ def test_duplicate_ids_rejected(tmp_path):
 @pytest.mark.parametrize(
     "over",
     [
-        {"validation": "fuzzy"},                                  # unknown validation type
-        {"validation": "exact_match", "expected": None},          # exact_match needs a string
+        {"validation": "fuzzy"},
+        {"validation": "exact_match", "expected": None},
         {"validation": "exact_match", "expected": "  "},
-        {"validation": "json", "expected": "BUG"},                # json needs object/array
-        {"validation": "schema", "expected": {"a": "str"}},       # not a JSON type name
+        {"validation": "json", "expected": "BUG"},
+        {"validation": "schema", "expected": {"a": "str"}},
         {"validation": "schema", "expected": {}},
-        {"validation": "non_empty", "expected": "x"},             # non_empty takes no expected
+        {"validation": "non_empty", "expected": "x"},
         {"category": "poetry"},
         {"prompt": ""},
         {"extra_field": 1},
@@ -63,9 +63,9 @@ def test_bad_task_rejected(tmp_path, over):
     "data",
     [
         "{not json",
-        [task()],                                    # bare list, no version
-        {"version": "1", "tasks": []},               # empty
-        {"tasks": [task()]},                         # missing version
+        [task()],
+        {"version": "1", "tasks": []},
+        {"tasks": [task()]},
         {"version": "1", "tasks": [task()], "sha256": "x"},
     ],
 )

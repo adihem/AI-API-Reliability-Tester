@@ -37,9 +37,9 @@ def test_non_empty(text, outcome):
         ("**BUG**", "BUG", None),
         ("21/10/2026", "21/10/2026", None),
         ("FEATURE", "BUG", WRONG),
-        ("Bug", "BUG", WRONG),                       # case-sensitive
+        ("Bug", "BUG", WRONG),
         ("reliability testing", "RELIABILITY TESTING", WRONG),
-        ("The answer is BUG", "BUG", WRONG),         # extra words are not stripped
+        ("The answer is BUG", "BUG", WRONG),
         ("", "BUG", EMPTY),
         (None, "BUG", EMPTY),
     ],
@@ -55,20 +55,20 @@ ANNA = {"name": "Anna", "age": 21}
     "text,expected,outcome",
     [
         ('{"name": "Anna", "age": 21}', ANNA, None),
-        ('{"age": 21, "name": "Anna"}', ANNA, None),          # key order irrelevant
+        ('{"age": 21, "name": "Anna"}', ANNA, None),
         ('```json\n{"name": "Anna", "age": 21}\n```', ANNA, None),
-        ('{"name": "Anna", "age": 21.0}', ANNA, None),         # same JSON number
+        ('{"name": "Anna", "age": 21.0}', ANNA, None),
         ("[8, 14, 20]", [8, 14, 20], None),
         ('{"is_weekend": true}', {"is_weekend": True}, None),
-        ('{"name": "Anna", "age": 22}', ANNA, WRONG),          # incorrect answer
-        ('{"name": "Anna"}', ANNA, WRONG),                     # missing field
-        ('{"name": "Anna", "age": 21, "x": 1}', ANNA, WRONG),  # extra field
-        ('{"name": "Anna", "age": "21"}', ANNA, WRONG),        # string vs number
-        ('{"is_weekend": 1}', {"is_weekend": True}, WRONG),    # 1 is not true
-        ("[20, 14, 8]", [8, 14, 20], WRONG),                   # order matters
-        ("Here you go: {\"name\": \"Anna\"}", ANNA, FORMAT),   # invalid JSON
-        ("{'name': 'Anna'}", ANNA, FORMAT),                    # python dict, not JSON
-        ("[1, 2]", ANNA, FORMAT),                              # wrong top-level type
+        ('{"name": "Anna", "age": 22}', ANNA, WRONG),
+        ('{"name": "Anna"}', ANNA, WRONG),
+        ('{"name": "Anna", "age": 21, "x": 1}', ANNA, WRONG),
+        ('{"name": "Anna", "age": "21"}', ANNA, WRONG),
+        ('{"is_weekend": 1}', {"is_weekend": True}, WRONG),
+        ("[20, 14, 8]", [8, 14, 20], WRONG),
+        ("Here you go: {\"name\": \"Anna\"}", ANNA, FORMAT),
+        ("{'name': 'Anna'}", ANNA, FORMAT),
+        ("[1, 2]", ANNA, FORMAT),
         ("", ANNA, EMPTY),
     ],
 )
@@ -83,13 +83,13 @@ USER = {"name": "string", "age": "integer", "email": "string"}
     "text,expected,outcome",
     [
         ('{"name": "Bo", "age": 30, "email": "b@x.io"}', USER, None),
-        ('{"name": "Bo", "age": 30, "email": "b@x.io", "id": 7}', USER, None),  # extras allowed
+        ('{"name": "Bo", "age": 30, "email": "b@x.io", "id": 7}', USER, None),
         ('```\n{"name": "Bo", "age": 30, "email": "b@x.io"}\n```', USER, None),
-        ('{"name": "Bo", "email": "b@x.io"}', USER, FORMAT),                    # missing field
-        ('{"name": "Bo", "age": "30", "email": "b@x.io"}', USER, FORMAT),       # wrong type
+        ('{"name": "Bo", "email": "b@x.io"}', USER, FORMAT),
+        ('{"name": "Bo", "age": "30", "email": "b@x.io"}', USER, FORMAT),
         ('{"name": "Bo", "age": 30.5, "email": "b@x.io"}', USER, FORMAT),
-        ('{"name": "Bo", "age": true, "email": "b@x.io"}', USER, FORMAT),       # bool is not integer
-        ('{"t": 21}', {"t": "number"}, None),                                   # int is a number
+        ('{"name": "Bo", "age": true, "email": "b@x.io"}', USER, FORMAT),
+        ('{"t": 21}', {"t": "number"}, None),
         ('{"t": 21.5}', {"t": "number"}, None),
         ('{"s": 1}', {"s": "boolean"}, FORMAT),
         ('{"l": ["a"], "c": 1}', {"l": "array", "c": "integer"}, None),
@@ -122,4 +122,4 @@ def test_dispatch_by_task_validation_type():
 def test_every_shipped_task_has_a_working_validator():
     ds = load_dataset(Path(__file__).parent.parent / "datasets" / "prompts.json")
     for task in ds.tasks:
-        assert validate(task, None).failure_type is EMPTY  # no crash on any task's expected value
+        assert validate(task, None).failure_type is EMPTY

@@ -141,7 +141,7 @@ def test_api_key_redacted_from_errors():
 
 
 def test_load_api_key(monkeypatch, tmp_path):
-    monkeypatch.chdir(tmp_path)  # no .env here
+    monkeypatch.chdir(tmp_path)
     monkeypatch.setenv("MY_KEY", "abc")
     assert load_api_key("MY_KEY") == "abc"
     monkeypatch.delenv("MY_KEY")

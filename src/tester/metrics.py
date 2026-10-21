@@ -38,13 +38,13 @@ class Metrics(BaseModel):
     initial_success_rate: float
     final_success_rate: float
     failure_rate: float
-    retry_recovery_rate: float | None  # None when nothing failed initially
+    retry_recovery_rate: float | None
 
     attempt_latency: LatencyStats
     task_latency: LatencyStats
 
-    final_failures: dict[str, int]    # why tasks ultimately failed
-    attempt_failures: dict[str, int]  # every failed attempt, including ones later retried
+    final_failures: dict[str, int]
+    attempt_failures: dict[str, int]
 
     input_tokens: int | None
     output_tokens: int | None
