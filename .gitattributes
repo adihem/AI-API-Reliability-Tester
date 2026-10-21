@@ -1,0 +1,2 @@
+# Keep dataset bytes identical on every machine so its sha256 is reproducible.
+datasets/** -text

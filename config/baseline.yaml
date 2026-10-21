@@ -1,0 +1,27 @@
+name: baseline
+dataset: datasets/prompts.json
+
+# Any OpenAI-compatible endpoint works. Examples:
+#   Groq:       base_url: https://api.groq.com/openai/v1   name: llama-3.1-8b-instant
+#   OpenRouter: base_url: https://openrouter.ai/api/v1     name: meta-llama/llama-3.1-8b-instruct
+#   Ollama:     base_url: http://localhost:11434/v1        name: llama3.2  (any non-empty key)
+model:
+  name: minimax/minimax-m3.1-flash:free
+  base_url: https://openrouter.ai/api/v1
+  api_key_env: API_KEY
+
+request:
+  temperature: 0.2
+  max_tokens: 500
+  timeout_seconds: 20
+
+test:
+  requests: 30
+  concurrency: 1
+
+retry:
+  enabled: false
+  max_attempts: 1
+
+validation:
+  type: exact_match
