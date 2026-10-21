@@ -56,7 +56,9 @@ class RequestConfig(Strict):
 class WorkloadConfig(Strict):
     # Not named TestConfig: pytest would try to collect it as a test class.
     requests: int = Field(gt=0)
-    concurrency: int = Field(default=1, gt=0)
+    # ponytail: runner is sequential; >1 is rejected rather than silently ignored.
+    # Lift the cap when the asyncio + httpx.AsyncClient runner exists.
+    concurrency: int = Field(default=1, ge=1, le=1)
     # Minimum gap between task starts. Keeps runs under a provider's per-minute cap so
     # self-inflicted RATE_LIMITs don't contaminate results (free OpenRouter: 20 req/min).
     min_interval_seconds: float = Field(default=0, ge=0)
